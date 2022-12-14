@@ -1,0 +1,16 @@
+Path 1
+GENERATE QR CODE
+DO NOT STORE unfeasabile
+if link changes
+---------------
+re-generate each time there is a change to link
+image sizes are small very feasible
+^^^^^^^^
+above path taken worked out quite well, need to implement file cleanup
+
+path 2
+generate then show each time
+unfeasabile
+how will you get image to show when there is no path
+solution:
+store image for a few seconds?

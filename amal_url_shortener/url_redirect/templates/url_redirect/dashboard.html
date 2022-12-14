@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="The MDN Web Docs Learning Area aims to provide complete beginners to the Web with all they need to know to get started with developing web sites and applications." />
+        {% load static %}
+        <title>Dashboard</title>
+        <link rel="stylesheet" href="{% static 'url_redirect/style.css' %}">
+        <script src="{% static 'url_redirect/script.js' %}"></script>
+    </head>
+    <header>
+        <h1>DASHBOARD</h1>
+    </header>
+    <body>
+        <form method="post" action="{{ request.path }}">
+            {% csrf_token %}
+            {{ form }}
+            <input type="submit" value="Submit">
+        </form>
+        <div id="main">
+            {{ request.get_host }}
+            <div>{{ message }}</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th id="su">Shortned URL</th>
+                        <th id="u">URL</th>
+                        <th id="v">Visits</th>
+                        <th id="dm">Date modified</th>
+                        <th id="qc">QR code</th>
+                    </tr>
+                </thead>
+                {% for i in urls %}
+                <tr>
+                    <td>
+                        <!--Later on add logic so that eg premium users can have custom urls-->
+                        <form method="post" action="{{ request.path }}edit/{{i.url_short}}/">
+                            {% csrf_token %}
+                            <a id="{{ i.url_short }}_link" href="{{ request.scheme }}://{{ request.get_host }}/r/{{i.url_short}}" target="_blank">{{ request.scheme }}://{{ request.get_host }}/r/<span id="short-code-{{ i.url_short }}">{{i.url_short}}</span>/</a>
+                            <span class="other-btns" id="other-btns-{{ i.url_short }}">
+                                <button type="button" onclick="copy('{{i.url_short}}_link')">Copy</button>
+                                <input type="button" value="edit" onclick="edit('{{i.url_short}}')">
+                            </span>
+                            <input id="submit-{{i.url_short}}" class="submit_edit" type="submit" value="save">
+                        </form>
+                    </td>
+                    <td>
+                        <a href="{{ i.url }}">{{ i.url }}</a>
+                    </td>
+                    <td>
+                        <p> {{ i.visits }}</p>
+                    </td>
+                    <td>
+                        <p> {{ i.pub_date }}</p>
+                    </td>
+                    <td>
+                        <div>
+                        {% with i.url_short as u_short %}
+                            {% with 'url_redirect/qr_codes/'|add:u_short|add:'.png' as qr_static %}
+                                <img id="{{ i.url_short }}" src="{% static qr_static %}" onclick="qr_toggle('{{ i.url_short }}')">
+                            {% endwith %}
+                        {% endwith %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </body>
+    <div id="popup">
+            <div id="button_div">
+                <button onclick="qr_toggle('close')">X</button>
+            </div>
+            <div id="popup_img">
+                <img src="">
+            </div>
+            <div id="popup_bar">
+
+            </div>
+        </div>
+        <div id="blackout" class="isolate"></div>
+</html>
