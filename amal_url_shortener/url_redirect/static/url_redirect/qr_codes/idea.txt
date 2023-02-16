@@ -14,3 +14,6 @@ unfeasabile
 how will you get image to show when there is no path
 solution:
 store image for a few seconds?
+
+PATH 3
+QR CODE GENERATED AND SAVED INTO A IN MEMEORY BUFFER
