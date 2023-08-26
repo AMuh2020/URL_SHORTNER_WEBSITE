@@ -1,83 +1,175 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="The MDN Web Docs Learning Area aims to provide complete beginners to the Web with all they need to know to get started with developing web sites and applications." />
-        {% load static %}
-        <title>Dashboard</title>
-        <link rel="stylesheet" href="{% static 'url_redirect/style.css' %}">
-        <script src="{% static 'url_redirect/script.js' %}"></script>
-    </head>
-    <header>
-        <h1>DASHBOARD</h1>
-    </header>
-    <body>
-        <form method="post" action="{{ request.path }}">
-            {% csrf_token %}
-            {{ form }}
-            <input type="submit" value="Submit">
-        </form>
-        <div id="main">
-            {{ request.get_host }}
-            <div>{{ message }}</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th id="su">Shortned URL</th>
-                        <th id="u">URL</th>
-                        <th id="v">Visits</th>
-                        <th id="dm">Date modified</th>
-                        <th id="qc">QR code</th>
-                    </tr>
-                </thead>
-                {% for i in urls %}
-                <tr>
-                    <td>
-                        <!--Later on add logic so that eg premium users can have custom urls-->
-                        <form method="post" action="{{ request.path }}edit/{{i.url_short}}/">
-                            {% csrf_token %}
-                            <a id="{{ i.url_short }}_link" href="{{ request.scheme }}://{{ request.get_host }}/r/{{i.url_short}}" target="_blank">{{ request.scheme }}://{{ request.get_host }}/r/<span id="short-code-{{ i.url_short }}">{{i.url_short}}</span>/</a>
-                            <span class="other-btns" id="other-btns-{{ i.url_short }}">
-                                <button type="button" onclick="copy('{{i.url_short}}_link')">Copy</button>
-                                <input type="button" value="edit" onclick="edit('{{i.url_short}}')">
-                            </span>
-                            <input id="submit-{{i.url_short}}" class="submit_edit" type="submit" value="save">
-                        </form>
-                    </td>
-                    <td>
-                        <a href="{{ i.url }}">{{ i.url }}</a>
-                    </td>
-                    <td>
-                        <p> {{ i.visits }}</p>
-                    </td>
-                    <td>
-                        <p> {{ i.pub_date }}</p>
-                    </td>
-                    <td>
-                        <div>
-                        {% with i.url_short as u_short %}
-                            {% with 'url_redirect/qr_codes/'|add:u_short|add:'.png' as qr_static %}
-                                <img id="{{ i.url_short }}" src="{% static qr_static %}" onclick="qr_toggle('{{ i.url_short }}')">
-                            {% endwith %}
-                        {% endwith %}
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<div id="main" class="container-fluid">
+    <h1 class="text-center mt-3">DASHBOARD</h1>
+    <hr>
+    <form method="post" action="{% url 'Dashboard' %}">
+        {% csrf_token %}
+        <div class="input-group">
+            <label class="input-group-text" for="url">URL</label>
+            <input class="form-control" type="text" name="url" placeholder="Enter URL" required>
+            <input class="btn btn-primary" type="submit" value="Submit">
         </div>
-    </body>
-    <div id="popup">
-            <div id="button_div">
-                <button onclick="qr_toggle('close')">X</button>
-            </div>
-            <div id="popup_img">
-                <img src="">
-            </div>
-            <div id="popup_bar">
+    </form>
+    {% if err_msg %}
+        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+            {{ err_msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endif %}
+    <table class="table text-center align-middle table-borderless" style="overflow-wrap:anywhere;">
+        <thead>
+            <tr>
+                <th id="su">Shortned URL</th>
+                <th id="u">URL</th>
+                <th id="v">Visits</th>
+                <th id="dm">Date modified</th>
+                <th id="qc">QR code</th>
+            </tr>
+        </thead>
+        {% for i in urls %}
+        <tr>
+            <td>
+                <!--Later on add logic so that eg premium users can have custom urls-->
+                {% if user.premium %}
+                <form method="post" action="{{ request.path }}edit/{{i.url_short}}/" class="d-inline">
+                    {% csrf_token %}
+                    <a id="{{ i.url_short }}_link" href="{% url 'Redirect' i.url_short %}" target="_blank">{{ request.scheme }}://{{ request.get_host }}/r/<span id="short-code-{{ i.url_short }}">{{i.url_short}}</span>/</a>
+                    <button class="btn btn-secondary" id="edit-{{i.url_short}}" type="button" name="edit" onclick="edit_short('{{i.url_short}}')">Edit</button>
+                    <button class="btn btn-danger d-none" id="cancel-{{i.url_short}}" type="button" name="cancel" onclick="cancel_edit('{{i.url_short}}')" >Cancel</button>
+                    <button class="btn btn-primary d-none" id="submit-{{i.url_short}}" class="submit_edit" type="submit">Save</button>
+                </form>
+                {% else %}
+                <a id="{{ i.url_short }}_link" href="{% url 'Redirect' i.url_short %}" target="_blank">{{ request.scheme }}://{{ request.get_host }}/r/<span id="short-code-{{ i.url_short }}">{{i.url_short}}</span>/</a>
+                {% endif %}
+                <button class="btn" id="copy-{{i.url_short}}" type="button" onclick="copy('{{i.url_short}}')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-fill" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M10 1.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-1Zm-5 0A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5v1A1.5 1.5 0 0 1 9.5 4h-3A1.5 1.5 0 0 1 5 2.5v-1Zm-2 0h1v1A2.5 2.5 0 0 0 6.5 5h3A2.5 2.5 0 0 0 12 2.5v-1h1a2 2 0 0 1 2 2V14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3.5a2 2 0 0 1 2-2Z"/>
+                    </svg>
+                </button>
+                
+            </td>
+            <td>
+                <a href="{{ i.url }}" target="_blank">{{ i.url }}</a>
+            </td>
+            <td>
+                {{ i.visits }}
+            </td>
+            <td>
+                {{ i.pub_date }}
+            </td>
+            <td>
+                <div>
+                {% with i.url_short as u_short %}
+                    {% with 'url_redirect/qr_codes/'|add:u_short|add:'.png' as qr_static %}
+                        <img id="{{ i.url_short }}" src="{% static qr_static %}" onclick="qr_toggle('{{ i.url_short }}')" alt="qr code" style="max-width: 5vw;">
+                    {% endwith %}
+                {% endwith %}
+                </div>
+            </td>
+            <td>
+                <button class="btn" id="trash-{{i.url_short}}" type="button" onclick="trash('{{i.url_short}}')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+                      </svg>
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% if urls.paginator.num_pages > 1 %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if urls.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">&laquo; First</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ urls.previous_page_number }}">Previous</a></li>
+            {% endif %}
+            {% for i in urls.paginator.page_range %}
+                {% if urls.number == i %}
+                    <li class="page-item active"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+    
+            {% if urls.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ urls.next_page_number }}">Next</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ urls.paginator.num_pages }}">Last &raquo;</a></li>
+            {% endif %}
+        </span>
+    </nav>
+    {% endif %}
+</div>
 
-            </div>
-        </div>
-        <div id="blackout" class="isolate"></div>
-</html>
+<div id="popup" class="position-absolute top-50 start-50 d-none z-3 mx-auto my-auto translate-middle" style="background-color: white;">
+    <div id="button_div" class="text-end p-1">
+        <button type="button" onclick="qr_toggle('close')" class="btn-close" aria-label="Close"></button>
+    </div>
+    <div id="popup_img" class="d-flex align-middle  justify-content-center">
+        <img id="pop_img" alt="QR CODE ENLARGED" src="">
+    </div>
+    <div id="popup_bar">
+
+    </div>
+</div>
+<div id="blackout" class="isolate position-absolute user-select-none d-none h-100 w-100 z-2 top-0 start-0" style="background-color: rgba(0, 0, 0, 0.7)"></div>
+<script>
+    function qr_toggle(id) {
+        console.log("IN")
+        var popup = document.getElementById("popup")
+        var black = document.getElementById("blackout")
+        /* gets child img tag and changes its src to the src of the qr that was clicked */
+        popup.classList.toggle("d-none")
+        black.classList.toggle("d-none")
+        if( id === "close"){
+            console.log("close")
+            document.getElementById("pop_img").src = "";
+        } else {
+            console.log("open")
+            document.getElementById("pop_img").src = document.getElementById(id).src;
+        }
+    }
+
+    function copy(short_code) {
+        if (!navigator.clipboard){
+            let copyText = document.getElementById(short_code+"_link");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+        } else{
+            var short_link = document.getElementById(short_code+"_link").innerText;
+            navigator.clipboard.writeText(short_link);
+        }
+    }
+    {% if user.premium %}
+    url = "{{ request.scheme }}://{{ request.get_host }}/r/"
+    function edit_short(short_code) {
+        var short_code_element = document.getElementById("short-code-"+short_code)
+        short_code_element.innerHTML = `<input name='edit_short' type='text' autocomplete='off' autofocus class='form-control d-inline w-auto' value='${short_code}'>`
+        document.getElementById("submit-"+short_code).classList.remove("d-none")
+        document.getElementById("cancel-"+short_code).classList.remove("d-none")
+        document.getElementById("edit-"+short_code).classList.add("d-none")
+        document.getElementById("copy-"+short_code).classList.add("d-none")
+        document.getElementById("trash-"+short_code).classList.add("d-none")
+        document.getElementById(short_code+"_link").removeAttribute("href")
+    }
+    function cancel_edit(short_code) {
+        document.getElementById("short-code-"+short_code).innerHTML = short_code
+        document.getElementById("submit-"+short_code).classList.add("d-none")
+        document.getElementById("cancel-"+short_code).classList.add("d-none")
+        document.getElementById("edit-"+short_code).classList.remove("d-none")
+        document.getElementById("copy-"+short_code).classList.remove("d-none")
+        document.getElementById("trash-"+short_code).classList.remove("d-none")
+        document.getElementById(short_code+"_link").setAttribute("href", url+short_code+"/")
+    }
+    {% endif %}
+    function trash(short_code) {
+        var r = confirm("Are you sure you want to delete this URL?")
+        if (r == true) {
+            window.location.href = "{{ request.path }}delete/"+short_code+"/"
+        }
+    }
+    
+</script>
+{% endblock %}

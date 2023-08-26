@@ -1,4 +1,4 @@
-
+/* 
 .qr {
     background-color: white;
     border-radius: 5px;
@@ -75,11 +75,7 @@ img{
     position: absolute;
 }
 
-a:visited { 
-    text-decoration: none;
-    color: blue;
-}
 .submit_edit{
     display: none;
-}
-/* submit button */
+}   
+submit button */

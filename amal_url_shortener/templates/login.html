@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<!-- bootstrap login page -->
+<div class="container-fluid text-center">
+        <div class="col-6 col-sm-3 mx-auto " style="margin-top: 30vh;">
+        
+            <h1 class=" mb-3">Log In</h1>
+            {% if message %}
+            <div class="alert alert-danger">{{ message }}</div>
+            {% endif %}
+            <form class="mb-4" method="post">
+                {% csrf_token %}
+                <div class="mb-3 form-group">
+                    <input name="username" id="username" type="text" class="form-control" placeholder="Username" autocomplete="off" required>
+                </div>
+                <div class="mb-3 form-group">
+                    <input name="password" id="password" type="password" class="form-control" placeholder="Password" autocomplete="off" required>
+                </div>
+                
+                <input class="btn btn-primary" type="submit" value="Log In">
+                
+            </form>
+            Don't have an account? <a href="{% url 'register' %}">Register here.</a>
+    </div>
+    
+    
+</div>
+{% endblock %}
