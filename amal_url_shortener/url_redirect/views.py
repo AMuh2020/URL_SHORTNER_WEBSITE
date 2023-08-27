@@ -16,12 +16,11 @@ def index(request):
 
 # Create your views here.
 def dashboard(request):
-    print(request.method)
     if request.method == 'POST':
         if not request.user.is_authenticated:
             return redirect('login')
         url = request.POST['url']
-        print(url)
+        # print(url)
         if not url.startswith('http://') and not url.startswith('https://'):
             url = 'https://' + url
         
@@ -38,7 +37,7 @@ def dashboard(request):
 
         return redirect('Dashboard')
     else:
-        info = Url.objects.filter(user=request.user.id)
+        info = Url.objects.filter(user=request.user.id).order_by('-pub_date')
         paginator = Paginator(info, 5)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)

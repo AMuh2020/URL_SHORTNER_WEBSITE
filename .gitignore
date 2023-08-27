@@ -2,3 +2,5 @@ venv
 db.sqlite3
 shortner_venv
 qr_codes
+.gitignore
+.pyc
