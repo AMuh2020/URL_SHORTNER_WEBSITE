@@ -4,3 +4,4 @@ shortner_venv
 qr_codes
 .gitignore
 .pyc
+__pycache__/
