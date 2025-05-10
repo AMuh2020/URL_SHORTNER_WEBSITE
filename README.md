@@ -1,5 +1,7 @@
 # URL Shortner project by AMUH2020
 
+Youtube Video demonstration: [https://youtu.be/JUjO2fZyYtA?si=vjKWU6ZmEpspyJCc](https://youtu.be/JUjO2fZyYtA?si=vjKWU6ZmEpspyJCc)
+
 ## Installation
 
 To install the project, you will need to have python 3.8+ installed on your system, then pip install the requirements.txt file using the command below
